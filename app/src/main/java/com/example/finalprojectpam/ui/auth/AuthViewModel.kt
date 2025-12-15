@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-// State UI sederhana
+
 data class AuthUiState(
 	val email: String = "",
 	val password: String = "",
@@ -56,7 +56,7 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
 		}
 	}
 
-	// ⭐ FUNGSI LOGOUT YANG DITAMBAHKAN ⭐
+
 	fun logout() {
 		viewModelScope.launch {
 			try {

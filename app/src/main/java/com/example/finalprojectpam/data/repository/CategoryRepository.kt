@@ -14,23 +14,31 @@ class CategoryRepository(private val supabase: SupabaseClient) {
 			.decodeList<Category>()
 	}
 
+
 	// 2. CREATE: Tambah kategori baru
-	suspend fun addCategory(name: String) {
+	suspend fun addCategory(name: String, imageUrl: String?) { // ⭐ Tambahkan imageUrl
 		val currentUser = supabase.auth.currentUserOrNull() ?: throw Exception("No user logged in")
 
 		val newCategory = Category(
-			userId = currentUser.id, // Ambil ID user dari sesi auth
-			name = name
+			userId = currentUser.id,
+			name = name,
+			imageUrl = imageUrl // ⭐ Simpan URL
 		)
 
 		supabase.postgrest["categories"].insert(newCategory)
 	}
 
-	// 3. UPDATE: Ubah nama kategori
-	suspend fun updateCategory(id: String, newName: String) {
+
+	// 3. UPDATE: Ubah nama kategori dan URL gambar
+	suspend fun updateCategory(
+		id: String,
+		newName: String,
+		newImageUrl: String? //  Tambahkan newImageUrl
+	) {
 		supabase.postgrest["categories"].update(
 			{
 				set("name", newName)
+				set("image_url", newImageUrl) //  Update URL gambar
 			}
 		) {
 			filter {

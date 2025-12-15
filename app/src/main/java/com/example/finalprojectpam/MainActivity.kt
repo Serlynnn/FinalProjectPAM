@@ -23,8 +23,15 @@ import com.example.finalprojectpam.ui.auth.AuthScreen
 import com.example.finalprojectpam.ui.auth.AuthViewModel
 import com.example.finalprojectpam.ui.auth.AuthViewModelFactory
 
+// ⭐ Import Repository yang diperlukan
+import com.example.finalprojectpam.data.repository.CategoryRepository
+import com.example.finalprojectpam.data.repository.StorageRepository
+import com.example.finalprojectpam.ui.category.CategoryViewModel
+import com.example.finalprojectpam.ui.category.CategoryViewModelFactory
+import com.example.finalprojectpam.ui.category.CategoryScreen
+
+
 // --- ENUM untuk Rute Navigasi ---
-// Gunakan sealed class/interface untuk mendefinisikan rute secara aman (type-safe)
 sealed class Screen(val route: String) {
 	object Auth : Screen("auth_route")
 	object Home : Screen("home_route")
@@ -67,16 +74,25 @@ fun AppNavigation(
 	authRepository: AuthRepository
 ) {
 	val navController = rememberNavController()
+	val supabaseClient = SupabaseProvider.client // Ambil Supabase client
 
-	// Membuat AuthViewModel menggunakan Factory (Injeksi Manual)
-	// Pastikan AuthViewModelFactory sudah dibuat di folder ui/auth
+	// Membuat AuthViewModel menggunakan Factory
 	val authViewModel: AuthViewModel = viewModel(
 		factory = AuthViewModelFactory(authRepository)
 	)
 
-	val categoryRepository = com.example.finalprojectpam.data.repository.CategoryRepository(com.example.finalprojectpam.data.supabase.SupabaseProvider.client)
-	val categoryViewModel: com.example.finalprojectpam.ui.category.CategoryViewModel = viewModel(
-		factory = com.example.finalprojectpam.ui.category.CategoryViewModelFactory(categoryRepository)
+	// ⭐ KOREKSI DI SINI: Inisialisasi dan Injeksi StorageRepository
+
+	// 1. Inisialisasi Repository
+	val categoryRepository = CategoryRepository(supabaseClient)
+	val storageRepository = StorageRepository(supabaseClient) // ⭐ BARU: Inisialisasi Storage Repository
+
+	// 2. Buat ViewModel Factory dengan dua Repository
+	val categoryViewModel: CategoryViewModel = viewModel(
+		factory = CategoryViewModelFactory(
+			categoryRepository,
+			storageRepository // ⭐ MASUKKAN PARAMETER YANG HILANG
+		)
 	)
 
 	NavHost(navController = navController, startDestination = startDestination) {
@@ -86,7 +102,6 @@ fun AppNavigation(
 			AuthScreen(
 				viewModel = authViewModel,
 				onNavigateToHome = {
-					// Pindah ke Home dan hapus layar Auth dari back stack
 					navController.navigate(Screen.Home.route) {
 						popUpTo(Screen.Auth.route) { inclusive = true }
 					}
@@ -98,15 +113,11 @@ fun AppNavigation(
 		composable(Screen.Home.route) {
 			MainScreen(
 				onLogout = {
-					// 1. Panggil Logout ViewModel
 					authViewModel.logout()
-
-					// 2. Kembali ke layar Auth dan hapus Home dari back stack
 					navController.navigate(Screen.Auth.route) {
 						popUpTo(Screen.Home.route) { inclusive = true }
 					}
 				},
-				// Tambahkan navigasi ke Kategori
 				onNavigateToCategory = {
 					navController.navigate(Screen.Category.route)
 				}
@@ -115,7 +126,7 @@ fun AppNavigation(
 
 		// Rute 3: Layar CRUD Kategori
 		composable(Screen.Category.route) {
-			com.example.finalprojectpam.ui.category.CategoryScreen(
+			CategoryScreen(
 				viewModel = categoryViewModel,
 				onNavigateBack = { navController.popBackStack() }
 			)
