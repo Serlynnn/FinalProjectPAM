@@ -26,6 +26,7 @@ class CategoryViewModel(
 ) : ViewModel() {
 
 	private val supabase = SupabaseProvider.client
+	private val BUCKET_NAME = "materials" // Definisikan nama bucket di sini
 
 	private val _uiState = MutableStateFlow(CategoryUiState())
 	val uiState: StateFlow<CategoryUiState> = _uiState.asStateFlow()
@@ -33,6 +34,27 @@ class CategoryViewModel(
 	init {
 		loadCategories()
 	}
+
+	// --- HELPER FUNCTION UNTUK MENGURAI URL (MENANGANI URL YANG SALAH DAN BENAR) ---
+	private fun extractPathFromUrl(imageUrl: String): String? {
+		val prefixA = "/object/public/$BUCKET_NAME/$BUCKET_NAME/" // Pola URL GANDA (yang salah)
+		val prefixB = "/object/public/$BUCKET_NAME/"              // Pola URL BENAR
+
+		return when {
+			imageUrl.contains(prefixA) -> {
+				// Jika mengandung gandaan (URL lama/salah)
+				imageUrl.substringAfter(prefixA)
+			}
+			imageUrl.contains(prefixB) -> {
+				// Jika mengandung URL yang benar
+				imageUrl.substringAfter(prefixB)
+			}
+			else -> {
+				null // Tidak bisa diurai
+			}
+		}
+	}
+	// --- AKHIR HELPER FUNCTION ---
 
 	fun loadCategories() {
 		viewModelScope.launch {
@@ -56,6 +78,7 @@ class CategoryViewModel(
 				if (imageByteArray != null) {
 					val userId = supabase.auth.currentUserOrNull()?.id
 						?: throw Exception("Pengguna tidak terautentikasi.")
+
 
 					val imagePath = "categories/${userId}/${System.currentTimeMillis()}.jpg"
 
@@ -88,13 +111,15 @@ class CategoryViewModel(
 					val userId = supabase.auth.currentUserOrNull()?.id
 						?: throw Exception("Pengguna tidak terautentikasi.")
 
+					// ⭐ KOREKSI URL GANDA: imagePath HANYA berisi subfolder (tanpa 'materials/')
 					val imagePath = "categories/${userId}/${System.currentTimeMillis()}.jpg"
 
 					val uploadedPath = storageRepository.uploadImage(newImageByteArray, imagePath)
 					finalImageUrl = storageRepository.getPublicUrl(uploadedPath)
+
+					// Catatan: Penghapusan gambar lama di sini bersifat opsional dan lebih kompleks.
+					// Saat ini, kita biarkan gambar lama (jika diganti) tetap ada di Storage untuk simplifikasi.
 				}
-				// Jika newImageByteArray null, tapi di UI pengguna ingin menghapus gambar (finalImageUrl diset null)
-				// maka finalImageUrl yang null akan dikirim ke repository
 
 				// 2. Update data kategori ke PostgREST
 				repository.updateCategory(id, name, finalImageUrl)
@@ -106,12 +131,28 @@ class CategoryViewModel(
 		}
 	}
 
+	// ⭐ FUNGSI DELETE KATEGORI BARU DENGAN LOGIKA HAPUS GAMBAR
 	fun deleteCategory(id: String) {
 		viewModelScope.launch {
-			_uiState.update { it.copy(isLoading = true) }
+			_uiState.update { it.copy(isLoading = true, error = null) }
 			try {
+				// 1. Ambil data kategori yang akan dihapus dari state saat ini
+				val categoryToDelete = _uiState.value.categories.find { it.id == id }
+
+				val imageUrl = categoryToDelete?.imageUrl
+				if (!imageUrl.isNullOrBlank()) {
+					// 2. Jika ada gambar, ekstrak path dan hapus dari Storage
+					val path = extractPathFromUrl(imageUrl)
+
+					if (path != null) {
+						storageRepository.deleteImage(path)
+					}
+				}
+
+				// 3. Hapus baris data dari PostgREST/Database
 				repository.deleteCategory(id)
-				loadCategories()
+
+				loadCategories() // Refresh list setelah hapus
 			} catch (e: Exception) {
 				_uiState.update { it.copy(isLoading = false, error = e.message) }
 			}

@@ -16,7 +16,12 @@ class StorageRepository(private val supabase: SupabaseClient) {
 	}
 
 	fun getPublicUrl(path: String): String {
-		return storage[BUCKET_NAME].publicUrl(path)
+
+		val baseUrl = supabase.supabaseUrl
+
+
+		// Path: /storage/v1/object/public/{bucket_name}/{path_file}
+		return "https://$baseUrl/storage/v1/object/public/$path"
 	}
 
 	suspend fun deleteImage(path: String) {
