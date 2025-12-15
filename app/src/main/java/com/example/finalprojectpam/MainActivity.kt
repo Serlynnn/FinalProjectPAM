@@ -29,6 +29,11 @@ sealed class Screen(val route: String) {
 	object Auth : Screen("auth_route")
 	object Home : Screen("home_route")
 	object Category : Screen("category_route")
+
+	object NotesList : Screen("notes_list_route")
+	object NoteEntry : Screen("note_entry_route/{noteId}") {
+		fun createRoute(noteId: String) = "note_entry_route/$noteId"
+		fun createNewRoute() = "note_entry_route/new"
 }
 
 // ---------------------------------------------
@@ -79,6 +84,11 @@ fun AppNavigation(
 		factory = com.example.finalprojectpam.ui.category.CategoryViewModelFactory(categoryRepository)
 	)
 
+	val noteRepository = NoteRepository(com.example.finalprojectpam.data.supabase.SupabaseProvider.client)
+	val noteViewModel: NoteViewModel = viewModel(
+		factory = NoteViewModelFactory(noteRepository)
+	)
+
 	NavHost(navController = navController, startDestination = startDestination) {
 
 		// Rute 1: Layar Login/Register
@@ -109,11 +119,37 @@ fun AppNavigation(
 				// Tambahkan navigasi ke Kategori
 				onNavigateToCategory = {
 					navController.navigate(Screen.Category.route)
+				},
+
+				onNavigateToNotes = {
+					navController.navigate(Screen.NotesList.route)
 				}
 			)
 		}
 
-		// Rute 3: Layar CRUD Kategori
+		// Rute 3: Layar List Catatan
+		composable(Screen.NotesList.route) {
+			NotesListScreen(
+				viewModel = noteViewModel,
+				onNavigateToDetail = { noteId ->
+					navController.navigate(Screen.NoteEntry.createRoute(noteId))
+				},
+				onNavigateBack = { navController.popBackStack() }
+			)
+		}
+
+		// Rute 4: Layar Tambah/Ubah Catatan
+		composable(Screen.NoteEntry.route) { backStackEntry ->
+			// Mengambil ID Catatan dari argumen navigasi. Default: "new"
+			val noteId = backStackEntry.arguments?.getString("noteId") ?: "new"
+			NoteEntryScreen(
+				noteId = noteId,
+				viewModel = noteViewModel,
+				onSaveSuccess = { navController.popBackStack() }
+			)
+		}
+
+		// Rute 5: Layar CRUD Kategori
 		composable(Screen.Category.route) {
 			com.example.finalprojectpam.ui.category.CategoryScreen(
 				viewModel = categoryViewModel,
@@ -131,6 +167,7 @@ fun AppNavigation(
 fun MainScreen(
 	onLogout: () -> Unit,
 	onNavigateToCategory: () -> Unit
+	onNavigateToNotes: () -> Unit
 ) {
 	Column(
 		modifier = Modifier.fillMaxSize(),
