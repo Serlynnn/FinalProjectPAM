@@ -26,9 +26,13 @@ import com.example.finalprojectpam.ui.auth.AuthViewModelFactory
 // ⭐ Import Repository yang diperlukan
 import com.example.finalprojectpam.data.repository.CategoryRepository
 import com.example.finalprojectpam.data.repository.StorageRepository
+import com.example.finalprojectpam.data.repository.FavoriteRepository
 import com.example.finalprojectpam.ui.category.CategoryViewModel
 import com.example.finalprojectpam.ui.category.CategoryViewModelFactory
 import com.example.finalprojectpam.ui.category.CategoryScreen
+import com.example.finalprojectpam.ui.favorite.FavoriteViewModel
+import com.example.finalprojectpam.ui.favorite.FavoriteViewModelFactory
+import com.example.finalprojectpam.ui.favorite.FavoriteScreen
 
 
 // --- ENUM untuk Rute Navigasi ---
@@ -36,6 +40,7 @@ sealed class Screen(val route: String) {
 	object Auth : Screen("auth_route")
 	object Home : Screen("home_route")
 	object Category : Screen("category_route")
+	object Favorite : Screen("favorite_route")
 }
 
 // ---------------------------------------------
@@ -82,7 +87,11 @@ fun AppNavigation(
 	)
 
 	// ⭐ KOREKSI DI SINI: Inisialisasi dan Injeksi StorageRepository
+	val favoriteRepository = FavoriteRepository(supabaseClient)
 
+	val favoriteViewModel: FavoriteViewModel = viewModel(
+		factory = FavoriteViewModelFactory(favoriteRepository)
+	)
 	// 1. Inisialisasi Repository
 	val categoryRepository = CategoryRepository(supabaseClient)
 	val storageRepository = StorageRepository(supabaseClient) // ⭐ BARU: Inisialisasi Storage Repository
@@ -120,6 +129,9 @@ fun AppNavigation(
 				},
 				onNavigateToCategory = {
 					navController.navigate(Screen.Category.route)
+				},
+				onNavigateToFavorite = {
+					navController.navigate(Screen.Favorite.route)
 				}
 			)
 		}
@@ -131,6 +143,58 @@ fun AppNavigation(
 				onNavigateBack = { navController.popBackStack() }
 			)
 		}
+		composable(Screen.Favorite.route) {
+			FavoriteScreen(
+				viewModel = favoriteViewModel,
+				onNavigateBack = { navController.popBackStack() }
+			)
+		}
+	}
+}
+
+NavHost(navController = navController, startDestination = startDestination) {
+
+		// Rute 1: Layar Login/Register
+		composable(Screen.Auth.route) {
+			AuthScreen(
+				viewModel = authViewModel,
+				onNavigateToHome = {
+					navController.navigate(Screen.Home.route) {
+						popUpTo(Screen.Auth.route) { inclusive = true }
+					}
+				}
+			)
+		}
+
+		// Rute 2: Layar Utama (Catatan)
+		composable(Screen.Home.route) {
+			MainScreen(
+				onLogout = {
+					authViewModel.logout()
+					navController.navigate(Screen.Auth.route) {
+						popUpTo(Screen.Home.route) { inclusive = true }
+					}
+				},
+				onNavigateToCategory = {
+					navController.navigate(Screen.Category.route)
+				}
+			)
+		}
+
+		// Rute 3: Layar CRUD Kategori
+		composable(Screen.Category.route) {
+			CategoryScreen(
+				viewModel = categoryViewModel,
+				onNavigateBack = { navController.popBackStack() }
+			)
+		}
+	// Rute 4: favorite screen
+	composable(Screen.Favorite.route) {
+		FavoriteScreen(
+			viewModel = favoriteViewModel,
+			onNavigateBack = { navController.popBackStack() }
+		)
+	}
 	}
 }
 
