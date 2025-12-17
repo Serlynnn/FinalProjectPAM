@@ -81,7 +81,7 @@ fun AppNavigation(
 		factory = AuthViewModelFactory(authRepository)
 	)
 
-	// ⭐ KOREKSI DI SINI: Inisialisasi dan Injeksi StorageRepository
+	// KOREKSI DI SINI: Inisialisasi dan Injeksi StorageRepository
 
 	// 1. Inisialisasi Repository
 	val categoryRepository = CategoryRepository(supabaseClient)
