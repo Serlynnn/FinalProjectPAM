@@ -23,7 +23,6 @@ import com.example.finalprojectpam.ui.auth.AuthScreen
 import com.example.finalprojectpam.ui.auth.AuthViewModel
 import com.example.finalprojectpam.ui.auth.AuthViewModelFactory
 
-// ⭐ Import Repository yang diperlukan
 import com.example.finalprojectpam.data.repository.CategoryRepository
 import com.example.finalprojectpam.data.repository.StorageRepository
 import com.example.finalprojectpam.ui.category.CategoryViewModel
@@ -31,16 +30,15 @@ import com.example.finalprojectpam.ui.category.CategoryViewModelFactory
 import com.example.finalprojectpam.ui.category.CategoryScreen
 
 
-// --- ENUM untuk Rute Navigasi ---
+// ENUM untuk Rute Navigasi
 sealed class Screen(val route: String) {
 	object Auth : Screen("auth_route")
 	object Home : Screen("home_route")
 	object Category : Screen("category_route")
 }
 
-// ---------------------------------------------
-// ## 1. Activity dan Inisialisasi Sesi Awal
-// ---------------------------------------------
+// 1. Activity dan Inisialisasi Sesi Awal
+
 
 class MainActivity : ComponentActivity() {
 
@@ -134,9 +132,9 @@ fun AppNavigation(
 	}
 }
 
-// ---------------------------------------------
-// ## 3. Composable Layar Utama (Contoh MainScreen)
-// ---------------------------------------------
+
+// 3. Composable Layar Utama (Contoh MainScreen)
+
 
 @Composable
 fun MainScreen(
