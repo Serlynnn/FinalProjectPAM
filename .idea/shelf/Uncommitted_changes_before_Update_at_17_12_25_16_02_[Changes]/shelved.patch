@@ -1,0 +1,111 @@
+Index: gradle/libs.versions.toml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>[versions]\nagp = \"8.12.3\"\nkotlin = \"2.2.0\"\ncoreKtx = \"1.17.0\"\njunit = \"4.13.2\"\njunitVersion = \"1.3.0\"\nespressoCore = \"3.7.0\"\nlifecycleRuntimeKtx = \"2.9.4\"\nactivityCompose = \"1.11.0\"\ncomposeBom = \"2024.09.00\"\n\n[libraries]\nandroidx-core-ktx = { group = \"androidx.core\", name = \"core-ktx\", version.ref = \"coreKtx\" }\njunit = { group = \"junit\", name = \"junit\", version.ref = \"junit\" }\nandroidx-junit = { group = \"androidx.test.ext\", name = \"junit\", version.ref = \"junitVersion\" }\nandroidx-espresso-core = { group = \"androidx.test.espresso\", name = \"espresso-core\", version.ref = \"espressoCore\" }\nandroidx-lifecycle-runtime-ktx = { group = \"androidx.lifecycle\", name = \"lifecycle-runtime-ktx\", version.ref = \"lifecycleRuntimeKtx\" }\nandroidx-activity-compose = { group = \"androidx.activity\", name = \"activity-compose\", version.ref = \"activityCompose\" }\nandroidx-compose-bom = { group = \"androidx.compose\", name = \"compose-bom\", version.ref = \"composeBom\" }\nandroidx-ui = { group = \"androidx.compose.ui\", name = \"ui\" }\nandroidx-ui-graphics = { group = \"androidx.compose.ui\", name = \"ui-graphics\" }\nandroidx-ui-tooling = { group = \"androidx.compose.ui\", name = \"ui-tooling\" }\nandroidx-ui-tooling-preview = { group = \"androidx.compose.ui\", name = \"ui-tooling-preview\" }\nandroidx-ui-test-manifest = { group = \"androidx.compose.ui\", name = \"ui-test-manifest\" }\nandroidx-ui-test-junit4 = { group = \"androidx.compose.ui\", name = \"ui-test-junit4\" }\nandroidx-material3 = { group = \"androidx.compose.material3\", name = \"material3\" }\n\n[plugins]\nandroid-application = { id = \"com.android.application\", version.ref = \"agp\" }\nkotlin-android = { id = \"org.jetbrains.kotlin.android\", version.ref = \"kotlin\" }\nkotlin-compose = { id = \"org.jetbrains.kotlin.plugin.compose\", version.ref = \"kotlin\" }\n\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/gradle/libs.versions.toml b/gradle/libs.versions.toml
+--- a/gradle/libs.versions.toml	(revision 641d7b99096da9558d84be59e4001713187cef00)
++++ b/gradle/libs.versions.toml	(date 1765962069781)
+@@ -8,6 +8,7 @@
+ lifecycleRuntimeKtx = "2.9.4"
+ activityCompose = "1.11.0"
+ composeBom = "2024.09.00"
++roomKtx = "2.8.4"
+ 
+ [libraries]
+ androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+@@ -24,6 +25,7 @@
+ androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
+ androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
+ androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
++androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "roomKtx" }
+ 
+ [plugins]
+ android-application = { id = "com.android.application", version.ref = "agp" }
+Index: app/build.gradle.kts
+===================================================================
+diff --git a/app/build.gradle.kts b/app/build.gradle.kts
+deleted file mode 100644
+--- a/app/build.gradle.kts	(revision 641d7b99096da9558d84be59e4001713187cef00)
++++ /dev/null	(revision 641d7b99096da9558d84be59e4001713187cef00)
+@@ -1,78 +0,0 @@
+-plugins {
+-    alias(libs.plugins.android.application)
+-    alias(libs.plugins.kotlin.android)
+-    alias(libs.plugins.kotlin.compose)
+-	kotlin("plugin.serialization") version "2.2.21"
+-}
+-
+-android {
+-    namespace = "com.example.finalprojectpam"
+-    compileSdk = 36
+-
+-    defaultConfig {
+-        applicationId = "com.example.finalprojectpam"
+-        minSdk = 27
+-        targetSdk = 36
+-        versionCode = 1
+-        versionName = "1.0"
+-
+-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+-    }
+-
+-    buildTypes {
+-        release {
+-            isMinifyEnabled = false
+-            proguardFiles(
+-                getDefaultProguardFile("proguard-android-optimize.txt"),
+-                "proguard-rules.pro"
+-            )
+-        }
+-    }
+-    compileOptions {
+-        sourceCompatibility = JavaVersion.VERSION_11
+-        targetCompatibility = JavaVersion.VERSION_11
+-    }
+-    kotlinOptions {
+-        jvmTarget = "11"
+-    }
+-    buildFeatures {
+-        compose = true
+-    }
+-}
+-
+-dependencies {
+-
+-    implementation(libs.androidx.core.ktx)
+-    implementation(libs.androidx.lifecycle.runtime.ktx)
+-    implementation(libs.androidx.activity.compose)
+-    implementation(platform(libs.androidx.compose.bom))
+-    implementation(libs.androidx.ui)
+-    implementation(libs.androidx.ui.graphics)
+-    implementation(libs.androidx.ui.tooling.preview)
+-    implementation(libs.androidx.material3)
+-    testImplementation(libs.junit)
+-    androidTestImplementation(libs.androidx.junit)
+-    androidTestImplementation(libs.androidx.espresso.core)
+-    androidTestImplementation(platform(libs.androidx.compose.bom))
+-    androidTestImplementation(libs.androidx.ui.test.junit4)
+-    debugImplementation(libs.androidx.ui.tooling)
+-    debugImplementation(libs.androidx.ui.test.manifest)
+-
+-	implementation("androidx.navigation:navigation-compose:2.9.6")
+-	implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+-	implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
+-
+-	implementation(platform("io.github.jan-tennert.supabase:bom:3.2.6"))
+-	implementation("io.github.jan-tennert.supabase:postgrest-kt")
+-	implementation("io.github.jan-tennert.supabase:auth-kt")
+-	implementation("io.github.jan-tennert.supabase:storage-kt")
+-
+-	// serialization
+-	implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
+-	implementation("io.ktor:ktor-client-android:3.3.3")
+-
+-	implementation("androidx.compose.material:material-icons-extended")
+-	implementation("androidx.compose.material3:material3")
+-	implementation("io.coil-kt:coil-compose:2.6.0")
+-
+-}
