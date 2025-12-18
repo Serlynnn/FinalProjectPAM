@@ -10,5 +10,9 @@ data class Category(
 	@SerialName("user_id")
 	val userId: String,
 
-	val name: String
+	val name: String,
+
+	@SerialName("image_url")
+	val imageUrl: String? = null
 )
+

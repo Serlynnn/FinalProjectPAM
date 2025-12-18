@@ -32,11 +32,11 @@ import com.example.finalprojectpam.ui.note.NoteViewModel
 import com.example.finalprojectpam.ui.note.NoteViewModelFactory
 import com.example.finalprojectpam.ui.note.NotesListScreen
 
-// Import Category (Fitur Anggota 3)
-import com.example.finalprojectpam.data.repository.CategoryRepository
-import com.example.finalprojectpam.ui.category.CategoryScreen
-import com.example.finalprojectpam.ui.category.CategoryViewModel
-import com.example.finalprojectpam.ui.category.CategoryViewModelFactory
+//// Import Category (Fitur Anggota 3)
+//import com.example.finalprojectpam.data.repository.CategoryRepository
+//import com.example.finalprojectpam.ui.category.CategoryScreen
+//import com.example.finalprojectpam.ui.category.CategoryViewModel
+//import com.example.finalprojectpam.ui.category.CategoryViewModelFactory
 
 
 // Rute Navigasi
@@ -86,11 +86,11 @@ fun AppNavigation(
 		factory = AuthViewModelFactory(authRepository)
 	)
 
-	// 2. Setup ViewModel Category
-	val categoryRepository = CategoryRepository(SupabaseProvider.client)
-	val categoryViewModel: CategoryViewModel = viewModel(
-		factory = CategoryViewModelFactory(categoryRepository)
-	)
+//	// 2. Setup ViewModel Category
+//	val categoryRepository = CategoryRepository(SupabaseProvider.client)
+//	val categoryViewModel: CategoryViewModel = viewModel(
+//		factory = CategoryViewModelFactory(categoryRepository)
+//	)
 
 	// 3. Setup ViewModel Notes
 	val noteRepository = NoteRepository(SupabaseProvider.client)
@@ -131,13 +131,13 @@ fun AppNavigation(
 			)
 		}
 
-		// Category
-		composable(Screen.Category.route) {
-			CategoryScreen(
-				viewModel = categoryViewModel,
-				onNavigateBack = { navController.popBackStack() }
-			)
-		}
+//		// Category
+//		composable(Screen.Category.route) {
+//			CategoryScreen(
+//				viewModel = categoryViewModel,
+//				onNavigateBack = { navController.popBackStack() }
+//			)
+//		}
 
 		// Notes List (Layar Daftar Catatan)
 		composable(Screen.NotesList.route) {
