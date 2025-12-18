@@ -36,6 +36,11 @@ fun CategoryScreen(
 	viewModel: CategoryViewModel,
 	onNavigateBack: () -> Unit
 ) {
+
+	LaunchedEffect(Unit) {
+		viewModel.loadCategories() // Pastikan nama fungsinya sesuai di CategoryViewModel
+	}
+
 	val state by viewModel.uiState.collectAsState()
 	var showDialog by remember { mutableStateOf(false) }
 	var categoryToEdit by remember { mutableStateOf<Category?>(null) }

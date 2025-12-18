@@ -4,18 +4,17 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 
 import com.example.finalprojectpam.data.auth.AuthRepository
 import com.example.finalprojectpam.data.supabase.SupabaseProvider
@@ -29,29 +28,31 @@ import com.example.finalprojectpam.ui.category.CategoryViewModel
 import com.example.finalprojectpam.ui.category.CategoryViewModelFactory
 import com.example.finalprojectpam.ui.category.CategoryScreen
 
+// IMPORT UNTUK FITUR NOTE
+import com.example.finalprojectpam.data.repository.NoteRepository
+import com.example.finalprojectpam.ui.note.NoteViewModel
+import com.example.finalprojectpam.ui.note.NoteViewModelFactory
+import com.example.finalprojectpam.ui.note.NotesListScreen
+import com.example.finalprojectpam.ui.note.NoteEntryScreen
 
 // ENUM untuk Rute Navigasi
 sealed class Screen(val route: String) {
 	object Auth : Screen("auth_route")
 	object Home : Screen("home_route")
 	object Category : Screen("category_route")
+
+	// RUTE BARU UNTUK NOTES
+	object NotesList : Screen("notes_list_route")
+	object NoteEntry : Screen("note_entry_route/{noteId}") {
+		fun createRoute(noteId: String) = "note_entry_route/$noteId"
+	}
 }
 
-// 1. Activity dan Inisialisasi Sesi Awal
-
-
 class MainActivity : ComponentActivity() {
-
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
-
 		val authRepository = AuthRepository(SupabaseProvider.client)
-
-		val startRoute = if (authRepository.isUserLoggedIn()) {
-			Screen.Home.route
-		} else {
-			Screen.Auth.route
-		}
+		val startRoute = if (authRepository.isUserLoggedIn()) Screen.Home.route else Screen.Auth.route
 
 		setContent {
 			AppNavigation(
@@ -62,40 +63,29 @@ class MainActivity : ComponentActivity() {
 	}
 }
 
-// ---------------------------------------------
-// ## 2. Composable Navigasi Utama (AppNavigation)
-// ---------------------------------------------
-
 @Composable
 fun AppNavigation(
 	startDestination: String,
 	authRepository: AuthRepository
 ) {
 	val navController = rememberNavController()
-	val supabaseClient = SupabaseProvider.client // Ambil Supabase client
+	val supabaseClient = SupabaseProvider.client
 
-	// Membuat AuthViewModel menggunakan Factory
-	val authViewModel: AuthViewModel = viewModel(
-		factory = AuthViewModelFactory(authRepository)
+	val authViewModel: AuthViewModel = viewModel(factory = AuthViewModelFactory(authRepository))
+
+	val categoryRepository = CategoryRepository(supabaseClient)
+	val storageRepository = StorageRepository(supabaseClient)
+	val categoryViewModel: CategoryViewModel = viewModel(
+		factory = CategoryViewModelFactory(categoryRepository, storageRepository)
 	)
 
-	// KOREKSI DI SINI: Inisialisasi dan Injeksi StorageRepository
-
-	// 1. Inisialisasi Repository
-	val categoryRepository = CategoryRepository(supabaseClient)
-	val storageRepository = StorageRepository(supabaseClient) // ⭐ BARU: Inisialisasi Storage Repository
-
-	// 2. Buat ViewModel Factory dengan dua Repository
-	val categoryViewModel: CategoryViewModel = viewModel(
-		factory = CategoryViewModelFactory(
-			categoryRepository,
-			storageRepository // ⭐ MASUKKAN PARAMETER YANG HILANG
-		)
+	val noteRepository = NoteRepository(supabaseClient)
+	val noteViewModel: NoteViewModel = viewModel(
+		factory = NoteViewModelFactory(noteRepository, categoryRepository) // Masukkan keduanya
 	)
 
 	NavHost(navController = navController, startDestination = startDestination) {
 
-		// Rute 1: Layar Login/Register
 		composable(Screen.Auth.route) {
 			AuthScreen(
 				viewModel = authViewModel,
@@ -107,7 +97,6 @@ fun AppNavigation(
 			)
 		}
 
-		// Rute 2: Layar Utama (Catatan)
 		composable(Screen.Home.route) {
 			MainScreen(
 				onLogout = {
@@ -116,47 +105,83 @@ fun AppNavigation(
 						popUpTo(Screen.Home.route) { inclusive = true }
 					}
 				},
-				onNavigateToCategory = {
-					navController.navigate(Screen.Category.route)
-				}
+				onNavigateToCategory = { navController.navigate(Screen.Category.route) },
+				onNavigateToNotes = { navController.navigate(Screen.NotesList.route) } // Navigasi ke Notes
 			)
 		}
 
-		// Rute 3: Layar CRUD Kategori
 		composable(Screen.Category.route) {
 			CategoryScreen(
 				viewModel = categoryViewModel,
 				onNavigateBack = { navController.popBackStack() }
 			)
 		}
+
+		// RUTE LIST NOTES
+		composable(Screen.NotesList.route) {
+			NotesListScreen(
+				viewModel = noteViewModel,
+				onNavigateToDetail = { noteId ->
+					navController.navigate(Screen.NoteEntry.createRoute(noteId))
+				},
+				onNavigateBack = { navController.popBackStack() }
+			)
+		}
+
+		// RUTE ENTRY NOTES (TAMBAH/EDIT)
+		composable(
+			route = Screen.NoteEntry.route,
+			arguments = listOf(navArgument("noteId") { type = NavType.StringType })
+		) { backStackEntry ->
+			val noteId = backStackEntry.arguments?.getString("noteId") ?: "new"
+			NoteEntryScreen(
+				noteId = noteId,
+				viewModel = noteViewModel,
+				onSaveSuccess = { navController.popBackStack() }
+			)
+		}
 	}
 }
-
-
-// 3. Composable Layar Utama (Contoh MainScreen)
-
 
 @Composable
 fun MainScreen(
 	onLogout: () -> Unit,
-	onNavigateToCategory: () -> Unit
+	onNavigateToCategory: () -> Unit,
+	onNavigateToNotes: () -> Unit // Tambahkan parameter
 ) {
 	Column(
 		modifier = Modifier.fillMaxSize(),
 		horizontalAlignment = Alignment.CenterHorizontally,
 		verticalArrangement = Arrangement.Center
 	) {
-		Text("Halaman Utama")
+		Text("Halaman Utama", style = MaterialTheme.typography.headlineMedium)
 
-		Spacer(modifier = Modifier.height(16.dp))
+		Spacer(modifier = Modifier.height(24.dp))
 
-		Button(onClick = onNavigateToCategory) {
-			Text("Kelola Kategori (Anggota 3)")
+		// Tombol Catatan
+		Button(
+			onClick = onNavigateToNotes,
+			modifier = Modifier.fillMaxWidth(0.7f)
+		) {
+			Text("Kelola Catatan (Anggota 2)")
 		}
 
 		Spacer(modifier = Modifier.height(16.dp))
 
-		Button(onClick = onLogout, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) {
+		// Tombol Kategori
+		Button(
+			onClick = onNavigateToCategory,
+			modifier = Modifier.fillMaxWidth(0.7f)
+		) {
+			Text("Kelola Kategori (Anggota 3)")
+		}
+
+		Spacer(modifier = Modifier.height(32.dp))
+
+		Button(
+			onClick = onLogout,
+			colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+		) {
 			Text("Logout")
 		}
 	}
