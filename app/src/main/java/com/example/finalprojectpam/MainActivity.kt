@@ -29,12 +29,19 @@ import com.example.finalprojectpam.ui.category.CategoryViewModel
 import com.example.finalprojectpam.ui.category.CategoryViewModelFactory
 import com.example.finalprojectpam.ui.category.CategoryScreen
 
+import com.example.finalprojectpam.data.repository.FavoriteRepository
+import com.example.finalprojectpam.ui.favorite.FavoriteViewModel
+import com.example.finalprojectpam.ui.favorite.FavoriteViewModelFactory
+import com.example.finalprojectpam.ui.favorite.FavoriteScreen
+
 
 // ENUM untuk Rute Navigasi
 sealed class Screen(val route: String) {
 	object Auth : Screen("auth_route")
 	object Home : Screen("home_route")
 	object Category : Screen("category_route")
+
+	object Favorite : Screen("favorite_route")
 }
 
 // 1. Activity dan Inisialisasi Sesi Awal
@@ -92,6 +99,12 @@ fun AppNavigation(
 			storageRepository // ⭐ MASUKKAN PARAMETER YANG HILANG
 		)
 	)
+	val favoriteRepository = FavoriteRepository(supabaseClient)
+
+// ⭐ ViewModel favorit
+	val favoriteViewModel: FavoriteViewModel = viewModel(
+		factory = FavoriteViewModelFactory(favoriteRepository)
+	)
 
 	NavHost(navController = navController, startDestination = startDestination) {
 
@@ -129,6 +142,14 @@ fun AppNavigation(
 				onNavigateBack = { navController.popBackStack() }
 			)
 		}
+		// Rute 4: Layar Favorite
+		composable(Screen.Favorite.route) {
+			FavoriteScreen(
+				viewModel = favoriteViewModel,
+				onNavigateBack = { navController.popBackStack() }
+			)
+		}
+
 	}
 }
 
