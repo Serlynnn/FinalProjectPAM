@@ -2,6 +2,7 @@ package com.example.finalprojectpam.data.repository
 
 import com.example.finalprojectpam.data.model.Note
 import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.storage.storage
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.query.Order
@@ -84,5 +85,14 @@ class NoteRepository(private val client: SupabaseClient) {
 					eq("id", noteId)
 				}
 			}
+	}
+
+	// 6. UPLOAD IMAGE
+	suspend fun uploadNoteImage(byteArray: ByteArray): String {
+		val bucketName = "note-images"
+		val fileName = "img_${System.currentTimeMillis()}.jpg"
+		val bucket = client.storage.from(bucketName)
+		bucket.upload(fileName, byteArray)
+		return bucket.publicUrl(fileName)
 	}
 }

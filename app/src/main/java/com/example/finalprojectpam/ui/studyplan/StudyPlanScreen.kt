@@ -41,6 +41,10 @@ fun StudyPlanScreen(
 	var showAddEditDialog by remember { mutableStateOf(false) }
 	var planToEdit by remember { mutableStateOf<StudyPlan?>(null) }
 
+	LaunchedEffect(Unit) {
+		viewModel.loadStudyPlans()
+	}
+
 	Scaffold(
 		topBar = {
 			TopAppBar(

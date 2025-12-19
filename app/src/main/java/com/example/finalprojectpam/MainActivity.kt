@@ -76,19 +76,21 @@ fun AppNavigation(
 
 	val categoryRepository = CategoryRepository(supabaseClient)
 	val storageRepository = StorageRepository(supabaseClient)
+	val noteRepository = NoteRepository(supabaseClient)
+	val studyPlanRepository = StudyPlanRepository(supabaseClient)
+
 	val categoryViewModel: CategoryViewModel = viewModel(
-		factory = CategoryViewModelFactory(categoryRepository, storageRepository)
+		factory = CategoryViewModelFactory(categoryRepository, storageRepository, noteRepository)
 	)
 
-	val noteRepository = NoteRepository(supabaseClient)
 	val noteViewModel: NoteViewModel = viewModel(
 		factory = NoteViewModelFactory(noteRepository, categoryRepository)
 	)
 
-	val studyPlanRepository = StudyPlanRepository(supabaseClient)
 	val studyPlanViewModel: StudyPlanViewModel = viewModel(
 		factory = StudyPlanViewModel.Factory(studyPlanRepository)
 	)
+
 
 	NavHost(navController = navController, startDestination = startDestination) {
 

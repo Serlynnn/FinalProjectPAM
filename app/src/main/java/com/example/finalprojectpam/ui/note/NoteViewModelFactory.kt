@@ -7,7 +7,7 @@ import com.example.finalprojectpam.data.repository.CategoryRepository
 
 class NoteViewModelFactory(
 	private val noteRepository: NoteRepository,
-	private val categoryRepository: CategoryRepository // Tambah ini
+	private val categoryRepository: CategoryRepository
 ) : ViewModelProvider.Factory {
 	override fun <T : ViewModel> create(modelClass: Class<T>): T {
 		return NoteViewModel(noteRepository, categoryRepository) as T

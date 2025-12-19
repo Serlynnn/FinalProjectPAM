@@ -111,6 +111,7 @@ fun CategoryScreen(
 			) {
 				CategoryGrid(
 					categories = state.categories,
+					noteCounts = state.noteCounts,
 					onEdit = { category ->
 						categoryToEdit = category
 						selectedImageUri = null // Reset URI sebelum edit
@@ -223,6 +224,7 @@ fun CategoryTopAppBar(onNavigateBack: () -> Unit) {
 @Composable
 fun CategoryGrid(
 	categories: List<Category>,
+	noteCounts: Map<String, Int>,
 	onEdit: (Category) -> Unit,
 	onDelete: (String) -> Unit
 ) {
@@ -233,11 +235,12 @@ fun CategoryGrid(
 		verticalArrangement = Arrangement.spacedBy(16.dp)
 	) {
 		items(categories, key = { it.id ?: it.name }) { category ->
-			category.id?.let {
+			category.id?.let { id ->
 				CategoryItem(
 					category = category,
+					noteCount = noteCounts[id] ?: 0,
 					onEdit = { onEdit(category) },
-					onDelete = { onDelete(it) }
+					onDelete = { onDelete(id) }
 				)
 			}
 		}
@@ -250,6 +253,7 @@ fun CategoryGrid(
 @Composable
 fun CategoryItem(
 	category: Category,
+	noteCount: Int,
 	onEdit: () -> Unit,
 	onDelete: () -> Unit
 ) {
@@ -296,7 +300,7 @@ fun CategoryItem(
 					)
 					Spacer(Modifier.width(4.dp))
 					Text(
-						text = "0 Catatan", // GANTI dengan data nyata jika sudah ada
+						text = "$noteCount Catatan",
 						style = MaterialTheme.typography.bodySmall,
 						color = Color.Gray
 					)
