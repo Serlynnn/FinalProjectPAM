@@ -28,24 +28,25 @@ import com.example.finalprojectpam.ui.category.CategoryViewModel
 import com.example.finalprojectpam.ui.category.CategoryViewModelFactory
 import com.example.finalprojectpam.ui.category.CategoryScreen
 
-// IMPORT UNTUK FITUR NOTE
 import com.example.finalprojectpam.data.repository.NoteRepository
 import com.example.finalprojectpam.ui.note.NoteViewModel
 import com.example.finalprojectpam.ui.note.NoteViewModelFactory
 import com.example.finalprojectpam.ui.note.NotesListScreen
 import com.example.finalprojectpam.ui.note.NoteEntryScreen
 
-// ENUM untuk Rute Navigasi
+import com.example.finalprojectpam.data.repository.StudyPlanRepository
+import com.example.finalprojectpam.ui.studyplan.StudyPlanScreen
+import com.example.finalprojectpam.ui.studyplan.StudyPlanViewModel
+
 sealed class Screen(val route: String) {
 	object Auth : Screen("auth_route")
 	object Home : Screen("home_route")
 	object Category : Screen("category_route")
-
-	// RUTE BARU UNTUK NOTES
 	object NotesList : Screen("notes_list_route")
 	object NoteEntry : Screen("note_entry_route/{noteId}") {
 		fun createRoute(noteId: String) = "note_entry_route/$noteId"
 	}
+	object StudyPlan : Screen("study_plan_route")
 }
 
 class MainActivity : ComponentActivity() {
@@ -81,7 +82,12 @@ fun AppNavigation(
 
 	val noteRepository = NoteRepository(supabaseClient)
 	val noteViewModel: NoteViewModel = viewModel(
-		factory = NoteViewModelFactory(noteRepository, categoryRepository) // Masukkan keduanya
+		factory = NoteViewModelFactory(noteRepository, categoryRepository)
+	)
+
+	val studyPlanRepository = StudyPlanRepository(supabaseClient)
+	val studyPlanViewModel: StudyPlanViewModel = viewModel(
+		factory = StudyPlanViewModel.Factory(studyPlanRepository)
 	)
 
 	NavHost(navController = navController, startDestination = startDestination) {
@@ -106,7 +112,8 @@ fun AppNavigation(
 					}
 				},
 				onNavigateToCategory = { navController.navigate(Screen.Category.route) },
-				onNavigateToNotes = { navController.navigate(Screen.NotesList.route) } // Navigasi ke Notes
+				onNavigateToNotes = { navController.navigate(Screen.NotesList.route) },
+				onNavigateToStudyPlan = { navController.navigate(Screen.StudyPlan.route) }
 			)
 		}
 
@@ -140,6 +147,13 @@ fun AppNavigation(
 				onSaveSuccess = { navController.popBackStack() }
 			)
 		}
+
+		composable(Screen.StudyPlan.route) {
+			StudyPlanScreen(
+				viewModel = studyPlanViewModel,
+				onNavigateBack = { navController.popBackStack() }
+			)
+		}
 	}
 }
 
@@ -147,7 +161,8 @@ fun AppNavigation(
 fun MainScreen(
 	onLogout: () -> Unit,
 	onNavigateToCategory: () -> Unit,
-	onNavigateToNotes: () -> Unit // Tambahkan parameter
+	onNavigateToNotes: () -> Unit,
+	onNavigateToStudyPlan: () -> Unit
 ) {
 	Column(
 		modifier = Modifier.fillMaxSize(),
@@ -163,7 +178,7 @@ fun MainScreen(
 			onClick = onNavigateToNotes,
 			modifier = Modifier.fillMaxWidth(0.7f)
 		) {
-			Text("Kelola Catatan (Anggota 2)")
+			Text("Kelola Catatan")
 		}
 
 		Spacer(modifier = Modifier.height(16.dp))
@@ -173,7 +188,17 @@ fun MainScreen(
 			onClick = onNavigateToCategory,
 			modifier = Modifier.fillMaxWidth(0.7f)
 		) {
-			Text("Kelola Kategori (Anggota 3)")
+			Text("Kelola Kategori")
+		}
+
+		Spacer(modifier = Modifier.height(16.dp)) // Jarak antar tombol
+
+		// ⭐ NAVIGASI KE STUDY PLAN
+		Button(
+			onClick = onNavigateToStudyPlan,
+			colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+		) {
+			Text("Rencana Belajar")
 		}
 
 		Spacer(modifier = Modifier.height(32.dp))
