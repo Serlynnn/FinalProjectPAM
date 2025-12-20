@@ -1,11 +1,11 @@
 package com.example.finalprojectpam.ui.category
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.finalprojectpam.data.model.Category
 import com.example.finalprojectpam.data.repository.CategoryRepository
 import com.example.finalprojectpam.data.repository.StorageRepository
+import com.example.finalprojectpam.data.repository.NoteRepository
 import com.example.finalprojectpam.data.supabase.SupabaseProvider
 import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,13 +16,15 @@ import kotlinx.coroutines.launch
 
 data class CategoryUiState(
 	val categories: List<Category> = emptyList(),
+	val noteCounts: Map<String, Int> = emptyMap(),
 	val isLoading: Boolean = false,
 	val error: String? = null
 )
 
 class CategoryViewModel(
 	private val repository: CategoryRepository,
-	private val storageRepository: StorageRepository
+	private val storageRepository: StorageRepository,
+	private val noteRepository: NoteRepository
 ) : ViewModel() {
 
 	private val supabase = SupabaseProvider.client
@@ -58,12 +60,30 @@ class CategoryViewModel(
 
 	fun loadCategories() {
 		viewModelScope.launch {
-			_uiState.update { it.copy(isLoading = true, error = null) }
+			_uiState.update { it.copy(isLoading = true) }
 			try {
-				val data = repository.getCategories()
-				_uiState.update { it.copy(categories = data, isLoading = false) }
+				// 1. Ambil Kategori
+				val categories = repository.getCategories()
+
+				// 2. Ambil Semua Note untuk menghitung jumlahnya
+				// Kita gunakan getNotesStream atau buat fungsi suspend getNotes() di repo
+				noteRepository.getNotesStream().collect { notes ->
+					// Hitung jumlah note per kategori
+					// Result: { "cat_id_1": 5, "cat_id_2": 3 }
+					val counts = notes.filter { it.categoryId != null }
+						.groupBy { it.categoryId!! }
+						.mapValues { it.value.size }
+
+					_uiState.update {
+						it.copy(
+							categories = categories,
+							noteCounts = counts,
+							isLoading = false
+						)
+					}
+				}
 			} catch (e: Exception) {
-				_uiState.update { it.copy(isLoading = false, error = e.message) }
+				_uiState.update { it.copy(error = e.localizedMessage, isLoading = false) }
 			}
 		}
 	}
@@ -161,18 +181,5 @@ class CategoryViewModel(
 
 	fun resetErrorState() {
 		_uiState.update { it.copy(error = null) }
-	}
-}
-
-class CategoryViewModelFactory(
-	private val repository: CategoryRepository,
-	private val storageRepository: StorageRepository
-) : ViewModelProvider.Factory {
-	override fun <T : ViewModel> create(modelClass: Class<T>): T {
-		if (modelClass.isAssignableFrom(CategoryViewModel::class.java)) {
-			@Suppress("UNCHECKED_CAST")
-			return CategoryViewModel(repository, storageRepository) as T
-		}
-		throw IllegalArgumentException("Unknown ViewModel class")
 	}
 }

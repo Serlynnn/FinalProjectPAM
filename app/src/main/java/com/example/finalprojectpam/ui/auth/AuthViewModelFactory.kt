@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.finalprojectpam.data.auth.AuthRepository
 
-
 class AuthViewModelFactory(private val repository: AuthRepository) : ViewModelProvider.Factory {
 
 	@Suppress("UNCHECKED_CAST")
