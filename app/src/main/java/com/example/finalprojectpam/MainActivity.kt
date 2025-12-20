@@ -231,6 +231,7 @@ fun MainScreen(
 		// NAVIGASI KE STUDY PLAN
 		Button(
 			onClick = onNavigateToStudyPlan,
+			modifier = Modifier.fillMaxWidth(0.7f),
 			colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
 		) {
 			Text("Rencana Belajar")
