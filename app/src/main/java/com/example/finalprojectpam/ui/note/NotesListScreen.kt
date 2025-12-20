@@ -8,12 +8,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -24,17 +28,16 @@ fun NotesListScreen(
 	onNavigateBack: () -> Unit
 ) {
 
-	val uiState by viewModel.listUiState.collectAsState()
+	// Menggunakan 'uiState' dari ViewModel yang sudah diperbarui
+	val uiState by viewModel.uiState.collectAsState()
 
-	LaunchedEffect(Unit) {
-		viewModel.loadNotes()
-	}
-
+	// Baris ini sekarang akan berfungsi karena ViewModel sudah punya 'favoriteIds'
+	val favoriteIds by viewModel.favoriteIds.collectAsState()
 
 	Scaffold(
 		topBar = {
 			TopAppBar(
-				title = { Text("Daftar Catatan (Realtime)") },
+				title = { Text("Daftar Catatan") },
 				navigationIcon = {
 					IconButton(onClick = onNavigateBack) {
 						Icon(Icons.Filled.ArrowBack, contentDescription = "Kembali")
@@ -50,27 +53,25 @@ fun NotesListScreen(
 	) { paddingValues ->
 		Box(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
 			when {
-				uiState.isLoading -> {
-					// Tampilkan Loading
-					CircularProgressIndicator(Modifier.fillMaxSize().wrapContentSize())
+				uiState.isLoading && uiState.notes.isEmpty() -> {
+					CircularProgressIndicator(Modifier.align(Alignment.Center))
 				}
 				uiState.error != null -> {
-					// Tampilkan Error
-					Text("Error: ${uiState.error}", color = MaterialTheme.colorScheme.error)
+					Text("Error: ${uiState.error}", color = MaterialTheme.colorScheme.error, modifier = Modifier.align(Alignment.Center))
 				}
 				uiState.notes.isEmpty() -> {
-					// Tampilkan Kosong
-					Text("Belum ada catatan. Tekan + untuk menambah.", modifier = Modifier.padding(16.dp))
+					Text("Belum ada catatan. Tekan + untuk menambah.", modifier = Modifier.align(Alignment.Center).padding(16.dp))
 				}
 				else -> {
-					LazyColumn(contentPadding = PaddingValues(8.dp)) {
-						// PERBAIKAN 1: Handle Key agar tidak null (gunakan elvis operator ?:)
+					LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
 						items(uiState.notes, key = { it.id ?: "unknown" }) { note ->
+							// Panggil NoteItem dengan semua parameter yang dibutuhkan
 							NoteItem(
 								note = note,
-								// PERBAIKAN 2: Cek jika ID null, jangan lakukan apa-apa
+								isFavorite = favoriteIds.contains(note.id),
 								onClick = { note.id?.let { onNavigateToDetail(it) } },
-								onDelete = { note.id?.let { viewModel.deleteNote(it) } }
+								onDelete = { note.id?.let { viewModel.deleteNote(it) } },
+								onToggleFavorite = { note.id?.let { viewModel.toggleFavorite(it) } }
 							)
 						}
 					}
@@ -81,40 +82,55 @@ fun NotesListScreen(
 }
 
 @Composable
-fun NoteItem(note: com.example.finalprojectpam.data.model.Note, onClick: () -> Unit, onDelete: () -> Unit) {
+fun NoteItem(
+	note: com.example.finalprojectpam.data.model.Note,
+	isFavorite: Boolean,         // Parameter untuk status favorit
+	onClick: () -> Unit,
+	onDelete: () -> Unit,
+	onToggleFavorite: () -> Unit // Parameter untuk aksi klik favorit
+) {
 	Card(
 		modifier = Modifier
 			.fillMaxWidth()
-			.padding(vertical = 4.dp)
-			.clickable(onClick = onClick)
+			.clickable(onClick = onClick),
+		elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
 	) {
 		Row(
-			modifier = Modifier
-				.padding(16.dp)
-				.fillMaxWidth(),
-			horizontalArrangement = Arrangement.SpaceBetween
+			modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+			verticalAlignment = Alignment.CenterVertically
 		) {
+			// Kolom untuk Teks
 			Column(modifier = Modifier.weight(1f)) {
 				Text(note.title, style = MaterialTheme.typography.titleMedium)
 				Spacer(Modifier.height(4.dp))
-
-				// PERBAIKAN 3: content bisa null, gunakan elvis operator
 				Text(
 					note.content ?: "",
 					style = MaterialTheme.typography.bodySmall,
-					maxLines = 1,
+					maxLines = 2,
+					overflow = TextOverflow.Ellipsis,
 					color = MaterialTheme.colorScheme.onSurfaceVariant
 				)
-
-				// PERBAIKAN 4: Gunakan dateCreated (camelCase), bukan date_created
-				// Dan handle null safety
+				Spacer(Modifier.height(8.dp))
 				Text(
 					"Dibuat: ${note.dateCreated?.take(10) ?: "-"}",
 					style = MaterialTheme.typography.labelSmall
 				)
 			}
-			IconButton(onClick = onDelete) {
-				Icon(Icons.Filled.Delete, contentDescription = "Hapus")
+
+			// Kolom untuk Tombol Aksi (Favorit dan Hapus)
+			Row {
+				// Tombol Favorit
+				IconButton(onClick = onToggleFavorite) {
+					Icon(
+						imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+						contentDescription = "Toggle Favorite",
+						tint = if (isFavorite) MaterialTheme.colorScheme.primary else Color.Gray
+					)
+				}
+				// Tombol Hapus
+				IconButton(onClick = onDelete) {
+					Icon(Icons.Filled.Delete, contentDescription = "Hapus")
+				}
 			}
 		}
 	}

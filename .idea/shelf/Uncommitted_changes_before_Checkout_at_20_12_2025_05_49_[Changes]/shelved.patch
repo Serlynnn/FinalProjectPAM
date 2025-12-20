@@ -1,0 +1,42 @@
+Index: app/src/main/java/com/example/finalprojectpam/data/supabase/SupabaseProvider.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.finalprojectpam.data.supabase\r\n\r\nimport io.github.jan.supabase.SupabaseClient\r\nimport io.github.jan.supabase.createSupabaseClient\r\nimport io.github.jan.supabase.auth.Auth\r\nimport io.github.jan.supabase.postgrest.Postgrest\r\nimport io.github.jan.supabase.storage.Storage\r\n\r\nobject SupabaseProvider {\r\n\r\n\tprivate const val SUPABASE_URL = \"https://bgflrtvbwcexlyilgaay.supabase.co\"\r\n\tprivate const val SUPABASE_KEY = \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJnZmxydHZid2NleGx5aWxnYWF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzYzMzUsImV4cCI6MjA4MDc1MjMzNX0.PwzZ1LYa_QqOciHuGw55lqsQidV-jmCUtJqqINlOxko\"\r\n\r\n\tval client: SupabaseClient = createSupabaseClient(\r\n\t\tsupabaseUrl = SUPABASE_URL,\r\n\t\tsupabaseKey = SUPABASE_KEY\r\n\t) {\r\n\t\tinstall(Auth)\r\n\t\tinstall(Postgrest)\r\n\t\tinstall(Storage)\r\n\t}\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/finalprojectpam/data/supabase/SupabaseProvider.kt b/app/src/main/java/com/example/finalprojectpam/data/supabase/SupabaseProvider.kt
+--- a/app/src/main/java/com/example/finalprojectpam/data/supabase/SupabaseProvider.kt	(revision 9658d1cb105960984f6befee72db99440635dc50)
++++ b/app/src/main/java/com/example/finalprojectpam/data/supabase/SupabaseProvider.kt	(date 1766184381468)
+@@ -8,8 +8,8 @@
+ 
+ object SupabaseProvider {
+ 
+-	private const val SUPABASE_URL = "https://bgflrtvbwcexlyilgaay.supabase.co"
+-	private const val SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJnZmxydHZid2NleGx5aWxnYWF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzYzMzUsImV4cCI6MjA4MDc1MjMzNX0.PwzZ1LYa_QqOciHuGw55lqsQidV-jmCUtJqqINlOxko"
++	private const val SUPABASE_URL = "https://uurmsrnesaumewkhxdpu.supabase.co"
++	private const val SUPABASE_KEY = "sb_publishable_mNC79uNE63LI2JbEq-k1iw_M5vgwgM4"
+ 
+ 	val client: SupabaseClient = createSupabaseClient(
+ 		supabaseUrl = SUPABASE_URL,
+Index: .idea/deploymentTargetSelector.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/deploymentTargetSelector.xml b/.idea/deploymentTargetSelector.xml
+deleted file mode 100644
+--- a/.idea/deploymentTargetSelector.xml	(revision 9658d1cb105960984f6befee72db99440635dc50)
++++ /dev/null	(revision 9658d1cb105960984f6befee72db99440635dc50)
+@@ -1,10 +0,0 @@
+-<?xml version="1.0" encoding="UTF-8"?>
+-<project version="4">
+-  <component name="deploymentTargetSelector">
+-    <selectionStates>
+-      <SelectionState runConfigName="app">
+-        <option name="selectionMode" value="DROPDOWN" />
+-      </SelectionState>
+-    </selectionStates>
+-  </component>
+-</project>
+\ No newline at end of file

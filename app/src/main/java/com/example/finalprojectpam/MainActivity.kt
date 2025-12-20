@@ -38,11 +38,19 @@ import com.example.finalprojectpam.data.repository.StudyPlanRepository
 import com.example.finalprojectpam.ui.studyplan.StudyPlanScreen
 import com.example.finalprojectpam.ui.studyplan.StudyPlanViewModel
 
+import com.example.finalprojectpam.data.repository.FavoriteRepository
+import com.example.finalprojectpam.ui.favorite.FavoriteViewModel
+import com.example.finalprojectpam.ui.favorite.FavoriteViewModelFactory
+import com.example.finalprojectpam.ui.favorite.FavoriteScreen
+
+
 sealed class Screen(val route: String) {
 	object Auth : Screen("auth_route")
 	object Home : Screen("home_route")
 	object Category : Screen("category_route")
 	object NotesList : Screen("notes_list_route")
+
+	object Favorite : Screen("favorite_route")
 	object NoteEntry : Screen("note_entry_route/{noteId}") {
 		fun createRoute(noteId: String) = "note_entry_route/$noteId"
 	}
@@ -78,18 +86,32 @@ fun AppNavigation(
 	val storageRepository = StorageRepository(supabaseClient)
 	val noteRepository = NoteRepository(supabaseClient)
 	val studyPlanRepository = StudyPlanRepository(supabaseClient)
+	val favoriteRepository = FavoriteRepository()
+
 
 	val categoryViewModel: CategoryViewModel = viewModel(
 		factory = CategoryViewModelFactory(categoryRepository, storageRepository, noteRepository)
 	)
 
 	val noteViewModel: NoteViewModel = viewModel(
-		factory = NoteViewModelFactory(noteRepository, categoryRepository)
+		factory = NoteViewModelFactory(
+			noteRepository = noteRepository,
+			categoryRepository = categoryRepository,
+			favoriteRepository = favoriteRepository
+		)
 	)
 
 	val studyPlanViewModel: StudyPlanViewModel = viewModel(
 		factory = StudyPlanViewModel.Factory(studyPlanRepository)
 	)
+
+	val favoriteViewModel: FavoriteViewModel = viewModel(
+		factory = FavoriteViewModelFactory(
+			noteRepository = noteRepository,       // Berikan noteRepository
+			favoriteRepository = favoriteRepository  // Berikan favoriteRepository
+		)
+	)
+
 
 
 	NavHost(navController = navController, startDestination = startDestination) {
@@ -115,7 +137,8 @@ fun AppNavigation(
 				},
 				onNavigateToCategory = { navController.navigate(Screen.Category.route) },
 				onNavigateToNotes = { navController.navigate(Screen.NotesList.route) },
-				onNavigateToStudyPlan = { navController.navigate(Screen.StudyPlan.route) }
+				onNavigateToStudyPlan = { navController.navigate(Screen.StudyPlan.route) },
+				onNavigateToFavorites = { navController.navigate(Screen.Favorite.route) }
 			)
 		}
 
@@ -156,6 +179,13 @@ fun AppNavigation(
 				onNavigateBack = { navController.popBackStack() }
 			)
 		}
+
+		composable(Screen.Favorite.route) {
+			FavoriteScreen(
+				viewModel = favoriteViewModel,
+				onNavigateBack = { navController.popBackStack() }
+			)
+		}
 	}
 }
 
@@ -164,7 +194,8 @@ fun MainScreen(
 	onLogout: () -> Unit,
 	onNavigateToCategory: () -> Unit,
 	onNavigateToNotes: () -> Unit,
-	onNavigateToStudyPlan: () -> Unit
+	onNavigateToStudyPlan: () -> Unit,
+	onNavigateToFavorites: () -> Unit
 ) {
 	Column(
 		modifier = Modifier.fillMaxSize(),
@@ -204,6 +235,15 @@ fun MainScreen(
 		}
 
 		Spacer(modifier = Modifier.height(32.dp))
+
+		Button(
+			onClick = onNavigateToFavorites, // Gunakan parameter yang baru dibuat
+			modifier = Modifier.fillMaxWidth(0.7f),
+			colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary) // Warna berbeda agar menonjol
+		) {
+			Text("Catatan Favorit")
+		}
+		Spacer(modifier = Modifier.height(16.dp))
 
 		Button(
 			onClick = onLogout,
