@@ -8,11 +8,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
@@ -26,15 +29,16 @@ fun NotesListScreen(
 
 	val uiState by viewModel.listUiState.collectAsState()
 
+	val favoriteIds by viewModel.favoriteNoteIds.collectAsState()
+
 	LaunchedEffect(Unit) {
 		viewModel.loadNotes()
 	}
 
-
 	Scaffold(
 		topBar = {
 			TopAppBar(
-				title = { Text("Daftar Catatan (Realtime)") },
+				title = { Text("Daftar Catatan") },
 				navigationIcon = {
 					IconButton(onClick = onNavigateBack) {
 						Icon(Icons.Filled.ArrowBack, contentDescription = "Kembali")
@@ -66,11 +70,15 @@ fun NotesListScreen(
 					LazyColumn(contentPadding = PaddingValues(8.dp)) {
 						// PERBAIKAN 1: Handle Key agar tidak null (gunakan elvis operator ?:)
 						items(uiState.notes, key = { it.id ?: "unknown" }) { note ->
+
+							val isFavorite = favoriteIds.contains(note.id)
+
 							NoteItem(
 								note = note,
-								// PERBAIKAN 2: Cek jika ID null, jangan lakukan apa-apa
+								isFavorite = isFavorite,
 								onClick = { note.id?.let { onNavigateToDetail(it) } },
-								onDelete = { note.id?.let { viewModel.deleteNote(it) } }
+								onDelete = { note.id?.let { viewModel.deleteNote(it) } },
+								onFavoriteToggle = { note.id?.let { viewModel.toggleFavorite(it) } }
 							)
 						}
 					}
@@ -81,7 +89,13 @@ fun NotesListScreen(
 }
 
 @Composable
-fun NoteItem(note: com.example.finalprojectpam.data.model.Note, onClick: () -> Unit, onDelete: () -> Unit) {
+fun NoteItem(
+	note: com.example.finalprojectpam.data.model.Note,
+	isFavorite: Boolean,
+	onClick: () -> Unit,
+	onDelete: () -> Unit,
+	onFavoriteToggle: () -> Unit
+) {
 	Card(
 		modifier = Modifier
 			.fillMaxWidth()
@@ -92,7 +106,8 @@ fun NoteItem(note: com.example.finalprojectpam.data.model.Note, onClick: () -> U
 			modifier = Modifier
 				.padding(16.dp)
 				.fillMaxWidth(),
-			horizontalArrangement = Arrangement.SpaceBetween
+			horizontalArrangement = Arrangement.SpaceBetween,
+			verticalAlignment = Alignment.CenterVertically
 		) {
 			Column(modifier = Modifier.weight(1f)) {
 				Text(note.title, style = MaterialTheme.typography.titleMedium)
@@ -113,8 +128,18 @@ fun NoteItem(note: com.example.finalprojectpam.data.model.Note, onClick: () -> U
 					style = MaterialTheme.typography.labelSmall
 				)
 			}
-			IconButton(onClick = onDelete) {
-				Icon(Icons.Filled.Delete, contentDescription = "Hapus")
+			Row {
+				// Tombol Favorit (Hati)
+				IconButton(onClick = onFavoriteToggle) {
+					Icon(
+						imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Default.FavoriteBorder,
+						contentDescription = "Favorit",
+						tint = if (isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+					)
+				}
+				IconButton(onClick = onDelete) {
+					Icon(Icons.Filled.Delete, contentDescription = "Hapus")
+				}
 			}
 		}
 	}

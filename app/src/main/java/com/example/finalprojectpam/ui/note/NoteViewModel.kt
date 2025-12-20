@@ -7,6 +7,7 @@ import com.example.finalprojectpam.data.model.Note
 import com.example.finalprojectpam.data.model.Category
 import com.example.finalprojectpam.data.repository.NoteRepository
 import com.example.finalprojectpam.data.repository.CategoryRepository
+import com.example.finalprojectpam.data.repository.FavoriteRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -44,7 +45,8 @@ data class NoteEntryUiState(
 
 class NoteViewModel(
 	private val noteRepository: NoteRepository,
-	private val categoryRepository: CategoryRepository
+	private val categoryRepository: CategoryRepository,
+	private val favoriteRepository: FavoriteRepository
 ) : ViewModel() {
 
 	// State untuk List Notes
@@ -55,6 +57,8 @@ class NoteViewModel(
 	private val _entryUiState = MutableStateFlow(NoteEntryUiState())
 	val entryUiState: StateFlow<NoteEntryUiState> = _entryUiState.asStateFlow()
 
+	val favoriteNoteIds: StateFlow<Set<String>> = favoriteRepository.favoriteStatus
+
 	fun loadNotes() {
 		viewModelScope.launch {
 			_listUiState.update { it.copy(isLoading = true) }
@@ -64,6 +68,16 @@ class NoteViewModel(
 				}
 			} catch (e: Exception) {
 				_listUiState.update { it.copy(error = e.localizedMessage, isLoading = false) }
+			}
+		}
+	}
+
+	fun toggleFavorite(noteId: String) {
+		viewModelScope.launch {
+			try {
+				favoriteRepository.toggleFavoriteStatus(noteId)
+			} catch (e: Exception) {
+				// Handle error jika diperlukan
 			}
 		}
 	}

@@ -16,13 +16,13 @@ class CategoryRepository(private val supabase: SupabaseClient) {
 
 
 	// 2. CREATE: Tambah kategori baru
-	suspend fun addCategory(name: String, imageUrl: String?) { // ⭐ Tambahkan imageUrl
+	suspend fun addCategory(name: String, imageUrl: String?) { // Tambahkan imageUrl
 		val currentUser = supabase.auth.currentUserOrNull() ?: throw Exception("No user logged in")
 
 		val newCategory = Category(
 			userId = currentUser.id,
 			name = name,
-			imageUrl = imageUrl // ⭐ Simpan URL
+			imageUrl = imageUrl // Simpan URL
 		)
 
 		supabase.postgrest["categories"].insert(newCategory)

@@ -131,7 +131,7 @@ class CategoryViewModel(
 					val userId = supabase.auth.currentUserOrNull()?.id
 						?: throw Exception("Pengguna tidak terautentikasi.")
 
-					// ⭐ KOREKSI URL GANDA: imagePath HANYA berisi subfolder (tanpa 'materials/')
+					// KOREKSI URL GANDA: imagePath HANYA berisi subfolder (tanpa 'materials/')
 					val imagePath = "categories/${userId}/${System.currentTimeMillis()}.jpg"
 
 					val uploadedPath = storageRepository.uploadImage(newImageByteArray, imagePath)

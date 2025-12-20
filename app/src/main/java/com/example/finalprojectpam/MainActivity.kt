@@ -17,13 +17,14 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 
 import com.example.finalprojectpam.data.auth.AuthRepository
-import com.example.finalprojectpam.data.supabase.SupabaseProvider
 import com.example.finalprojectpam.ui.auth.AuthScreen
 import com.example.finalprojectpam.ui.auth.AuthViewModel
 import com.example.finalprojectpam.ui.auth.AuthViewModelFactory
 
-import com.example.finalprojectpam.data.repository.CategoryRepository
+import com.example.finalprojectpam.data.supabase.SupabaseProvider
 import com.example.finalprojectpam.data.repository.StorageRepository
+
+import com.example.finalprojectpam.data.repository.CategoryRepository
 import com.example.finalprojectpam.ui.category.CategoryViewModel
 import com.example.finalprojectpam.ui.category.CategoryViewModelFactory
 import com.example.finalprojectpam.ui.category.CategoryScreen
@@ -38,6 +39,11 @@ import com.example.finalprojectpam.data.repository.StudyPlanRepository
 import com.example.finalprojectpam.ui.studyplan.StudyPlanScreen
 import com.example.finalprojectpam.ui.studyplan.StudyPlanViewModel
 
+import com.example.finalprojectpam.data.repository.FavoriteRepository
+import com.example.finalprojectpam.ui.favorite.FavoriteViewModel
+import com.example.finalprojectpam.ui.favorite.FavoriteViewModelFactory
+import com.example.finalprojectpam.ui.favorite.FavoriteScreen
+
 sealed class Screen(val route: String) {
 	object Auth : Screen("auth_route")
 	object Home : Screen("home_route")
@@ -47,6 +53,8 @@ sealed class Screen(val route: String) {
 		fun createRoute(noteId: String) = "note_entry_route/$noteId"
 	}
 	object StudyPlan : Screen("study_plan_route")
+
+	object Favorite : Screen("favorite_route")
 }
 
 class MainActivity : ComponentActivity() {
@@ -78,19 +86,23 @@ fun AppNavigation(
 	val storageRepository = StorageRepository(supabaseClient)
 	val noteRepository = NoteRepository(supabaseClient)
 	val studyPlanRepository = StudyPlanRepository(supabaseClient)
+	val favoriteRepository = FavoriteRepository()
 
 	val categoryViewModel: CategoryViewModel = viewModel(
 		factory = CategoryViewModelFactory(categoryRepository, storageRepository, noteRepository)
 	)
 
 	val noteViewModel: NoteViewModel = viewModel(
-		factory = NoteViewModelFactory(noteRepository, categoryRepository)
+		factory = NoteViewModelFactory(noteRepository, categoryRepository, favoriteRepository)
 	)
 
 	val studyPlanViewModel: StudyPlanViewModel = viewModel(
 		factory = StudyPlanViewModel.Factory(studyPlanRepository)
 	)
 
+	val favoriteViewModel: FavoriteViewModel = viewModel(
+		factory = FavoriteViewModelFactory(noteRepository, favoriteRepository)
+	)
 
 	NavHost(navController = navController, startDestination = startDestination) {
 
@@ -115,7 +127,8 @@ fun AppNavigation(
 				},
 				onNavigateToCategory = { navController.navigate(Screen.Category.route) },
 				onNavigateToNotes = { navController.navigate(Screen.NotesList.route) },
-				onNavigateToStudyPlan = { navController.navigate(Screen.StudyPlan.route) }
+				onNavigateToStudyPlan = { navController.navigate(Screen.StudyPlan.route) },
+				onNavigateToFavorite = { navController.navigate(Screen.Favorite.route) }
 			)
 		}
 
@@ -156,6 +169,13 @@ fun AppNavigation(
 				onNavigateBack = { navController.popBackStack() }
 			)
 		}
+
+		composable(Screen.Favorite.route) {
+			FavoriteScreen(
+				viewModel = favoriteViewModel,
+				onNavigateBack = { navController.popBackStack() }
+			)
+		}
 	}
 }
 
@@ -164,7 +184,8 @@ fun MainScreen(
 	onLogout: () -> Unit,
 	onNavigateToCategory: () -> Unit,
 	onNavigateToNotes: () -> Unit,
-	onNavigateToStudyPlan: () -> Unit
+	onNavigateToStudyPlan: () -> Unit,
+	onNavigateToFavorite: () -> Unit
 ) {
 	Column(
 		modifier = Modifier.fillMaxSize(),
@@ -174,6 +195,18 @@ fun MainScreen(
 		Text("Halaman Utama", style = MaterialTheme.typography.headlineMedium)
 
 		Spacer(modifier = Modifier.height(24.dp))
+
+		// TOMBOL FAVORIT BARU
+		Button(
+			onClick = onNavigateToFavorite,
+			modifier = Modifier.fillMaxWidth(0.7f),
+			colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
+		) {
+			Text("Catatan Favorit")
+		}
+
+		Spacer(modifier = Modifier.height(16.dp))
+
 
 		// Tombol Catatan
 		Button(
@@ -195,7 +228,7 @@ fun MainScreen(
 
 		Spacer(modifier = Modifier.height(16.dp)) // Jarak antar tombol
 
-		// ⭐ NAVIGASI KE STUDY PLAN
+		// NAVIGASI KE STUDY PLAN
 		Button(
 			onClick = onNavigateToStudyPlan,
 			colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)

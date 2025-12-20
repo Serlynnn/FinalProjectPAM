@@ -4,12 +4,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.finalprojectpam.data.repository.NoteRepository
 import com.example.finalprojectpam.data.repository.CategoryRepository
+import com.example.finalprojectpam.data.repository.FavoriteRepository
 
 class NoteViewModelFactory(
 	private val noteRepository: NoteRepository,
-	private val categoryRepository: CategoryRepository
+	private val categoryRepository: CategoryRepository,
+	private val favoriteRepository: FavoriteRepository
 ) : ViewModelProvider.Factory {
 	override fun <T : ViewModel> create(modelClass: Class<T>): T {
-		return NoteViewModel(noteRepository, categoryRepository) as T
+		return NoteViewModel(noteRepository, categoryRepository, favoriteRepository) as T
 	}
 }
